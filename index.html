@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="pt-AO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simulador individual de salário, proposta salarial e retenção de IRT em prestações de serviços em Angola.">
+  <meta name="theme-color" content="#102a43">
+  <title>Simulador IRT e INSS — Angola 2026</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102a43'/%3E%3Cpath d='M15 18h34v8H15zm0 20h34v8H15z' fill='%23f2c94c'/%3E%3Cpath d='M24 12h8v40h-8z' fill='white'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #102a43;
+      --navy-2: #163c5d;
+      --ink: #172b3a;
+      --muted: #607283;
+      --line: #d9e2ec;
+      --soft: #f3f7fa;
+      --paper: #ffffff;
+      --gold: #f2c94c;
+      --gold-soft: #fff8d9;
+      --green: #087f5b;
+      --red: #b42318;
+      --shadow: 0 18px 50px rgba(16, 42, 67, .09);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        linear-gradient(180deg, var(--navy) 0 230px, #eaf0f5 230px 100%);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 44px; }
+    header { color: white; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+    .brand { display: flex; gap: 14px; align-items: center; }
+    .mark {
+      width: 46px; height: 46px; border-radius: 13px; background: var(--gold); color: var(--navy);
+      display: grid; place-items: center; font-weight: 900; letter-spacing: -.04em; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.15rem); line-height: 1.08; letter-spacing: -.035em; }
+    .eyebrow { margin: 4px 0 0; color: #c9d7e4; font-size: .9rem; }
+    .year-chip { flex: none; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 8px 13px; color: #edf5fb; font-weight: 700; font-size: .88rem; }
+    main { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); gap: 22px; align-items: start; }
+    .card { background: var(--paper); border: 1px solid rgba(16,42,67,.08); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+    .card-head { padding: 22px 24px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .card-head h2 { margin: 0; font-size: 1.08rem; letter-spacing: -.015em; }
+    .reset { border: 0; background: transparent; color: var(--navy-2); padding: 6px 0; font-weight: 700; font-size: .9rem; }
+    .reset:hover, .reset:focus-visible { text-decoration: underline; }
+    .form-body { padding: 22px 24px 24px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 16px; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 7px; }
+    .hint { display: block; color: var(--muted); font-weight: 500; font-size: .77rem; line-height: 1.35; margin-top: 3px; }
+    .money { position: relative; }
+    .money input { padding-right: 48px; }
+    .suffix { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; font-weight: 700; pointer-events: none; }
+    input, select {
+      width: 100%; min-height: 47px; border: 1px solid #bccbd8; border-radius: 10px; background: white; color: var(--ink); padding: 10px 13px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--navy-2); box-shadow: 0 0 0 3px rgba(22,60,93,.14); }
+    input[aria-invalid="true"] { border-color: var(--red); }
+    .note { margin: 18px 0 0; padding: 13px 15px; border-left: 3px solid var(--gold); background: var(--gold-soft); color: #534717; font-size: .84rem; border-radius: 0 9px 9px 0; }
+    .results { padding: 22px 24px 24px; }
+    .net-panel { background: var(--navy); color: white; border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+    .net-label { color: #c9d7e4; font-size: .83rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .net-value { display: block; margin-top: 4px; font-size: clamp(2rem, 5vw, 2.85rem); line-height: 1.1; letter-spacing: -.045em; font-weight: 850; font-variant-numeric: tabular-nums; }
+    .net-caption { display: block; color: #c9d7e4; font-size: .8rem; margin-top: 7px; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+    .metric { padding: 14px 15px; min-height: 78px; }
+    .metric:nth-child(odd) { border-right: 1px solid var(--line); }
+    .metric:nth-child(-n+4) { border-bottom: 1px solid var(--line); }
+    .metric:nth-last-child(-n+2) { border-bottom: 0; }
+    .metric span { display: block; color: var(--muted); font-size: .78rem; margin-bottom: 4px; }
+    .metric strong { display: block; font-size: 1.01rem; font-variant-numeric: tabular-nums; }
+    .metric.highlight strong { color: var(--green); }
+    .breakdown { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 4px; }
+    details { border-bottom: 1px solid var(--line); }
+    summary { padding: 14px 2px; font-weight: 750; font-size: .9rem; cursor: pointer; color: var(--navy-2); }
+    .lines { padding: 0 2px 14px; }
+    .line { display: flex; justify-content: space-between; gap: 18px; padding: 6px 0; color: var(--muted); font-size: .84rem; }
+    .line b { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
+    .formula { color: var(--muted); font-size: .79rem; background: var(--soft); padding: 11px 12px; border-radius: 8px; margin: 4px 0 10px; }
+    .table-wrap { overflow-x: auto; padding: 0 0 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: .78rem; min-width: 470px; }
+    th, td { text-align: right; padding: 8px 7px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    tr.current { background: var(--gold-soft); }
+    footer { color: #53697c; text-align: center; margin-top: 20px; font-size: .78rem; }
+    .error-box { display: none; margin-bottom: 14px; color: var(--red); background: #fff1f0; border: 1px solid #f6c7c3; padding: 10px 12px; border-radius: 9px; font-size: .84rem; }
+    .error-box.show { display: block; }
+    .mode-tabs {
+      display: flex; gap: 6px; margin: 0 0 18px; padding: 5px; width: fit-content; max-width: 100%;
+      background: rgba(255,255,255,.96); border: 1px solid rgba(16,42,67,.1); border-radius: 13px; box-shadow: 0 10px 28px rgba(16,42,67,.1);
+      overflow-x: auto;
+    }
+    .mode-tab {
+      flex: none; border: 0; border-radius: 9px; background: transparent; color: var(--muted); padding: 10px 14px;
+      font-weight: 750; font-size: .88rem; white-space: nowrap;
+    }
+    .mode-tab[aria-selected="true"] { background: var(--navy); color: white; box-shadow: 0 5px 14px rgba(16,42,67,.18); }
+    .mode-tab:focus-visible { outline: 3px solid rgba(242,201,76,.7); outline-offset: 2px; }
+    .mode-panel[hidden] { display: none; }
+    .result-note { margin: 13px 0 0; color: var(--muted); font-size: .8rem; }
+    @media (max-width: 820px) {
+      body { background: linear-gradient(180deg, var(--navy) 0 190px, #eaf0f5 190px 100%); }
+      .shell { width: min(100% - 22px, 680px); padding-top: 24px; }
+      main { grid-template-columns: 1fr; }
+      header { margin-bottom: 20px; }
+      .year-chip { display: none; }
+      .mode-tabs { width: 100%; }
+    }
+    @media (max-width: 520px) {
+      .fields { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .card-head, .form-body, .results { padding-left: 18px; padding-right: 18px; }
+      .metrics { grid-template-columns: 1fr; }
+      .metric:nth-child(odd) { border-right: 0; }
+      .metric:not(:last-child) { border-bottom: 1px solid var(--line); }
+      .brand { align-items: flex-start; }
+      .mark { width: 42px; height: 42px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .net-value { transition: opacity .15s ease, transform .15s ease; }
+      .net-value.updating { opacity: .55; transform: translateY(2px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">Kz</div>
+        <div>
+          <h1>Simulador IRT e INSS</h1>
+          <p class="eyebrow">Remunerações e prestação de serviços · Angola</p>
+        </div>
+      </div>
+      <div class="year-chip">Regras de 2026</div>
+    </header>
+
+    <nav class="mode-tabs" role="tablist" aria-label="Tipo de simulação">
+      <button class="mode-tab" id="tab-salary" role="tab" aria-selected="true" aria-controls="mode-salary" data-mode="salary" type="button">Salário → líquido</button>
+      <button class="mode-tab" id="tab-inverse" role="tab" aria-selected="false" aria-controls="mode-inverse" data-mode="inverse" type="button">Líquido → proposta</button>
+      <button class="mode-tab" id="tab-service" role="tab" aria-selected="false" aria-controls="mode-service" data-mode="service" type="button">Prestação de serviços</button>
+    </nav>
+
+    <main id="mode-salary" class="mode-panel" role="tabpanel" aria-labelledby="tab-salary">
+      <section class="card" aria-labelledby="dados-title">
+        <div class="card-head">
+          <h2 id="dados-title">Remuneração mensal</h2>
+          <button class="reset" id="reset" type="button">Limpar valores</button>
+        </div>
+        <div class="form-body">
+          <div class="error-box" id="error-box" role="alert"></div>
+          <form id="salary-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="base">Salário base</label>
+                <div class="money"><input id="base" name="base" type="number" min="0" step="1000" inputmode="decimal" value="500000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="status">Situação contributiva</label>
+                <select id="status" name="status">
+                  <option value="normal">Trabalhador — 3%</option>
+                  <option value="retired">Trabalhador reformado — 8%</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="meal">Subsídio de alimentação <span class="hint">Isento de IRT até 30 000 Kz</span></label>
+                <div class="money"><input id="meal" name="meal" type="number" min="0" step="1000" inputmode="decimal" value="30000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="transport">Subsídio de transporte <span class="hint">Isento de IRT até 30 000 Kz</span></label>
+                <div class="money"><input id="transport" name="transport" type="number" min="0" step="1000" inputmode="decimal" value="30000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="other">Outras remunerações <span class="hint">Prémios, comissões, subsídio de Natal, horas extra, etc.</span></label>
+                <div class="money"><input id="other" name="other" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="vacation">Subsídio de férias <span class="hint">Sujeito a IRT; excluído da base do INSS</span></label>
+                <div class="money"><input id="vacation" name="vacation" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="family">Abono de família <span class="hint">Isento de IRT até 5% do salário base</span></label>
+                <div class="money"><input id="family" name="family" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="deductions">Outros descontos <span class="hint">Não alteram o IRT ou o INSS; reduzem apenas o líquido</span></label>
+                <div class="money"><input id="deductions" name="deductions" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+            </div>
+          </form>
+          <p class="note">Alimentação, transporte e outras remunerações integram a base do INSS. O subsídio de férias e o abono de família ficam excluídos dessa base.</p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="resultado-title" aria-live="polite">
+        <div class="card-head"><h2 id="resultado-title">Resultado da simulação</h2></div>
+        <div class="results">
+          <div class="net-panel">
+            <span class="net-label">Salário líquido estimado</span>
+            <strong class="net-value" id="net">0 Kz</strong>
+            <span class="net-caption">Após INSS, IRT e outros descontos indicados</span>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Remuneração bruta</span><strong id="gross">0 Kz</strong></div>
+            <div class="metric"><span>INSS do trabalhador</span><strong id="inss-worker">0 Kz</strong></div>
+            <div class="metric"><span>IRT</span><strong id="irt">0 Kz</strong></div>
+            <div class="metric"><span>Matéria colectável</span><strong id="taxable">0 Kz</strong></div>
+            <div class="metric"><span>INSS da entidade (8%)</span><strong id="inss-employer">0 Kz</strong></div>
+            <div class="metric highlight"><span>Custo total da entidade</span><strong id="employer-cost">0 Kz</strong></div>
+          </div>
+
+          <div class="breakdown">
+            <details open>
+              <summary>Como foi calculado</summary>
+              <div class="lines">
+                <div class="line"><span>Base de incidência do INSS</span><b id="inss-base">0 Kz</b></div>
+                <div class="line"><span>Rendimento sujeito a IRT antes do INSS</span><b id="tax-before-inss">0 Kz</b></div>
+                <div class="line"><span>Dedução do INSS do trabalhador</span><b id="inss-deduction">− 0 Kz</b></div>
+                <div class="line"><span>Escalão aplicado</span><b id="bracket">Isento</b></div>
+                <p class="formula" id="formula">Sem IRT: matéria colectável até 150 000 Kz.</p>
+              </div>
+            </details>
+            <details>
+              <summary>Tabela de IRT 2026</summary>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Matéria colectável</th><th>Parcela fixa</th><th>Taxa</th></tr></thead>
+                  <tbody id="tax-table"></tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <main id="mode-inverse" class="mode-panel" role="tabpanel" aria-labelledby="tab-inverse" hidden>
+      <section class="card" aria-labelledby="inverse-data-title">
+        <div class="card-head"><h2 id="inverse-data-title">Proposta salarial</h2></div>
+        <div class="form-body">
+          <div class="error-box" id="inverse-error" role="alert"></div>
+          <form id="inverse-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="inv-net">Salário líquido pretendido</label>
+                <div class="money"><input id="inv-net" type="number" min="0" step="1000" inputmode="decimal" value="500000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="inv-status">Situação contributiva</label>
+                <select id="inv-status">
+                  <option value="normal">Trabalhador — 3%</option>
+                  <option value="retired">Trabalhador reformado — 8%</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="inv-meal">Subsídio de alimentação</label>
+                <div class="money"><input id="inv-meal" type="number" min="0" step="1000" inputmode="decimal" value="30000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="inv-transport">Subsídio de transporte</label>
+                <div class="money"><input id="inv-transport" type="number" min="0" step="1000" inputmode="decimal" value="30000"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="inv-other">Outras remunerações fixas <span class="hint">Sujeitas a INSS e IRT</span></label>
+                <div class="money"><input id="inv-other" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+              <div class="field">
+                <label for="inv-deductions">Outros descontos</label>
+                <div class="money"><input id="inv-deductions" type="number" min="0" step="1000" inputmode="decimal" value="0"><span class="suffix">Kz</span></div>
+              </div>
+            </div>
+          </form>
+          <p class="note">O cálculo encontra o salário base mínimo, em Kwanzas inteiros, que permite atingir o líquido pretendido com os componentes indicados.</p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="inverse-result-title" aria-live="polite">
+        <div class="card-head"><h2 id="inverse-result-title">Proposta calculada</h2></div>
+        <div class="results">
+          <div class="net-panel">
+            <span class="net-label">Remuneração bruta necessária</span>
+            <strong class="net-value" id="inv-gross">0 Kz</strong>
+            <span class="net-caption">Líquido estimado: <b id="inv-net-achieved">0 Kz</b></span>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Salário base proposto</span><strong id="inv-base-result">0 Kz</strong></div>
+            <div class="metric"><span>INSS do trabalhador</span><strong id="inv-worker-inss">0 Kz</strong></div>
+            <div class="metric"><span>IRT</span><strong id="inv-irt">0 Kz</strong></div>
+            <div class="metric"><span>Matéria colectável</span><strong id="inv-taxable">0 Kz</strong></div>
+            <div class="metric"><span>INSS da entidade (8%)</span><strong id="inv-employer-inss">0 Kz</strong></div>
+            <div class="metric highlight"><span>Custo total da entidade</span><strong id="inv-employer-cost">0 Kz</strong></div>
+          </div>
+          <p class="result-note" id="inv-gap"></p>
+        </div>
+      </section>
+    </main>
+
+    <main id="mode-service" class="mode-panel" role="tabpanel" aria-labelledby="tab-service" hidden>
+      <section class="card" aria-labelledby="service-data-title">
+        <div class="card-head"><h2 id="service-data-title">Prestação de serviços</h2></div>
+        <div class="form-body">
+          <div class="error-box" id="service-error" role="alert"></div>
+          <form id="service-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="service-direction">Calcular a partir de</label>
+                <select id="service-direction">
+                  <option value="gross">Valor bruto acordado</option>
+                  <option value="net">Valor líquido pretendido</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="service-amount" id="service-amount-label">Valor bruto acordado</label>
+                <div class="money"><input id="service-amount" type="number" min="0" step="1000" inputmode="decimal" value="500000"><span class="suffix">Kz</span></div>
+              </div>
+            </div>
+          </form>
+          <p class="note">Aplica retenção de IRT de 6,5% quando a prestação estiver sujeita a retenção na fonte. Não inclui IVA, Segurança Social, outros impostos ou despesas do prestador.</p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="service-result-title" aria-live="polite">
+        <div class="card-head"><h2 id="service-result-title">Resultado da prestação</h2></div>
+        <div class="results">
+          <div class="net-panel">
+            <span class="net-label">Valor líquido a receber</span>
+            <strong class="net-value" id="service-net">0 Kz</strong>
+            <span class="net-caption">Após retenção de IRT a 6,5%</span>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Valor bruto</span><strong id="service-gross">0 Kz</strong></div>
+            <div class="metric"><span>IRT retido (6,5%)</span><strong id="service-irt">0 Kz</strong></div>
+            <div class="metric"><span>Taxa de retenção</span><strong>6,5%</strong></div>
+            <div class="metric highlight"><span>Valor líquido</span><strong id="service-net-2">0 Kz</strong></div>
+          </div>
+          <p class="formula" id="service-formula"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>Simulação informativa baseada na tabela do IRT de 2026, no regime contributivo e na retenção aplicável aos serviços. Confirma o enquadramento com a contabilidade ou a entidade competente.</footer>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const RULES = {
+        year: 2026,
+        mealExemption: 30000,
+        transportExemption: 30000,
+        familyExemptionRate: 0.05,
+        employerInssRate: 0.08,
+        serviceIrtRate: 0.065,
+        workerInssRates: { normal: 0.03, retired: 0.08 },
+        brackets: [
+          { min: 0, max: 150000, fixed: 0, rate: 0, excess: 0, label: 'Até 150 000 Kz' },
+          { min: 150000, max: 200000, fixed: 12500, rate: 0.16, excess: 150000, label: '150 001–200 000 Kz' },
+          { min: 200000, max: 300000, fixed: 31250, rate: 0.18, excess: 200000, label: '200 001–300 000 Kz' },
+          { min: 300000, max: 500000, fixed: 49250, rate: 0.19, excess: 300000, label: '300 001–500 000 Kz' },
+          { min: 500000, max: 1000000, fixed: 87250, rate: 0.20, excess: 500000, label: '500 001–1 000 000 Kz' },
+          { min: 1000000, max: 1500000, fixed: 187250, rate: 0.21, excess: 1000000, label: '1 000 001–1 500 000 Kz' },
+          { min: 1500000, max: 2000000, fixed: 292250, rate: 0.22, excess: 1500000, label: '1 500 001–2 000 000 Kz' },
+          { min: 2000000, max: 2500000, fixed: 402250, rate: 0.23, excess: 2000000, label: '2 000 001–2 500 000 Kz' },
+          { min: 2500000, max: 5000000, fixed: 517250, rate: 0.24, excess: 2500000, label: '2 500 001–5 000 000 Kz' },
+          { min: 5000000, max: 10000000, fixed: 1117250, rate: 0.245, excess: 5000000, label: '5 000 001–10 000 000 Kz' },
+          { min: 10000000, max: Infinity, fixed: 2342250, rate: 0.25, excess: 10000000, label: 'Acima de 10 000 000 Kz' }
+        ]
+      };
+
+      const ids = ['base', 'meal', 'transport', 'other', 'vacation', 'family', 'deductions'];
+      const form = document.getElementById('salary-form');
+      const status = document.getElementById('status');
+      const errorBox = document.getElementById('error-box');
+      const money = new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const pct = value => `${(value * 100).toLocaleString('pt-AO', { maximumFractionDigits: 1 })}%`;
+      const fmt = value => money.format(Number.isFinite(value) ? value : 0).replace('AOA', 'Kz');
+
+      function numberFrom(id, sourceValue) {
+        const value = Number(sourceValue ?? document.getElementById(id).value ?? 0);
+        if (!Number.isFinite(value) || value < 0) throw new Error('Todos os valores devem ser iguais ou superiores a zero.');
+        return value;
+      }
+
+      function selectMode(mode, focusTab = false) {
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+          const active = tab.dataset.mode === mode;
+          tab.setAttribute('aria-selected', String(active));
+          tab.tabIndex = active ? 0 : -1;
+          if (active && focusTab) tab.focus();
+        });
+        document.querySelectorAll('.mode-panel').forEach(panel => { panel.hidden = panel.id !== `mode-${mode}`; });
+      }
+
+      function readValues(override) {
+        const source = override || {};
+        const values = {};
+        ids.forEach(id => {
+          const raw = Object.prototype.hasOwnProperty.call(source, id) ? source[id] : document.getElementById(id).value;
+          const value = Number(raw || 0);
+          if (!Number.isFinite(value) || value < 0) throw new Error(`O campo “${document.querySelector(`label[for="${id}"]`).childNodes[0].textContent.trim()}” deve ter um valor igual ou superior a zero.`);
+          values[id] = value;
+        });
+        values.status = source.status || status.value;
+        if (!Object.prototype.hasOwnProperty.call(RULES.workerInssRates, values.status)) throw new Error('Situação contributiva inválida.');
+        return values;
+      }
+
+      function findBracket(taxable) {
+        return RULES.brackets.find((b, index) => index === 0 ? taxable <= b.max : taxable > b.min && taxable <= b.max) || RULES.brackets.at(-1);
+      }
+
+      function calculate(values) {
+        const gross = values.base + values.meal + values.transport + values.other + values.vacation + values.family;
+        const inssBase = values.base + values.meal + values.transport + values.other;
+        const workerRate = RULES.workerInssRates[values.status];
+        const workerInss = inssBase * workerRate;
+        const employerInss = inssBase * RULES.employerInssRate;
+        const taxableMeal = Math.max(0, values.meal - RULES.mealExemption);
+        const taxableTransport = Math.max(0, values.transport - RULES.transportExemption);
+        const familyExemption = values.base * RULES.familyExemptionRate;
+        const taxableFamily = Math.max(0, values.family - familyExemption);
+        const taxBeforeInss = values.base + values.other + values.vacation + taxableMeal + taxableTransport + taxableFamily;
+        const taxable = Math.max(0, taxBeforeInss - workerInss);
+        const bracket = findBracket(taxable);
+        const irt = bracket.rate === 0 ? 0 : bracket.fixed + Math.max(0, taxable - bracket.excess) * bracket.rate;
+        const net = gross - workerInss - irt - values.deductions;
+        const employerCost = gross + employerInss;
+        return { ...values, gross, inssBase, workerRate, workerInss, employerInss, taxableMeal, taxableTransport, taxableFamily, taxBeforeInss, taxable, bracket, irt, net, employerCost };
+      }
+
+      function readInverseValues(override = {}) {
+        const values = {
+          targetNet: numberFrom('inv-net', override.targetNet),
+          meal: numberFrom('inv-meal', override.meal),
+          transport: numberFrom('inv-transport', override.transport),
+          other: numberFrom('inv-other', override.other),
+          deductions: numberFrom('inv-deductions', override.deductions),
+          status: override.status || document.getElementById('inv-status').value
+        };
+        if (!Object.prototype.hasOwnProperty.call(RULES.workerInssRates, values.status)) throw new Error('Situação contributiva inválida.');
+        return values;
+      }
+
+      function solveInverse(values) {
+        const template = { base: 0, meal: values.meal, transport: values.transport, other: values.other, vacation: 0, family: 0, deductions: values.deductions, status: values.status };
+        const workerRate = RULES.workerInssRates[values.status];
+        const taxableConstant = values.other + Math.max(0, values.meal - RULES.mealExemption) + Math.max(0, values.transport - RULES.transportExemption)
+          - workerRate * (values.meal + values.transport + values.other);
+        const taxableSlope = 1 - workerRate;
+        const resultAt = base => calculate({ ...template, base });
+
+        for (let index = 0; index < RULES.brackets.length; index += 1) {
+          const bracket = RULES.brackets[index];
+          let low = index === 0 ? 0 : Math.max(0, Math.floor((bracket.min - taxableConstant) / taxableSlope) + 1);
+          let high;
+          if (Number.isFinite(bracket.max)) {
+            high = Math.max(-1, Math.floor((bracket.max - taxableConstant) / taxableSlope));
+          } else {
+            high = Math.max(low + 1, Math.ceil(values.targetNet * 2 + values.deductions + 100000));
+            while (resultAt(high).net < values.targetNet && high < 1e12) high *= 2;
+          }
+          if (low > high || high < 0) continue;
+
+          while (low <= high && resultAt(low).bracket !== bracket) low += 1;
+          while (high >= low && resultAt(high).bracket !== bracket) high -= 1;
+          if (low > high) continue;
+          if (resultAt(low).net >= values.targetNet) return resultAt(low);
+          if (resultAt(high).net < values.targetNet) continue;
+
+          let left = low;
+          let right = high;
+          while (left < right) {
+            const middle = Math.floor((left + right) / 2);
+            if (resultAt(middle).net >= values.targetNet) right = middle;
+            else left = middle + 1;
+          }
+          return resultAt(left);
+        }
+        throw new Error('Não foi possível encontrar uma proposta para o valor indicado.');
+      }
+
+      function renderInverse(result, targetNet) {
+        const box = document.getElementById('inverse-error');
+        box.classList.remove('show');
+        box.textContent = '';
+        setText('inv-gross', fmt(result.gross));
+        setText('inv-net-achieved', fmt(result.net));
+        setText('inv-base-result', fmt(result.base));
+        setText('inv-worker-inss', `${fmt(result.workerInss)} (${pct(result.workerRate)})`);
+        setText('inv-irt', fmt(result.irt));
+        setText('inv-taxable', fmt(result.taxable));
+        setText('inv-employer-inss', fmt(result.employerInss));
+        setText('inv-employer-cost', fmt(result.employerCost));
+        const difference = result.net - targetNet;
+        setText('inv-gap', difference > 0.005 ? `O líquido calculado excede o pretendido em ${fmt(difference)}, devido ao arredondamento do salário base ao Kwanza inteiro.` : 'O líquido calculado corresponde ao valor pretendido.');
+      }
+
+      function updateInverse() {
+        try {
+          const values = readInverseValues();
+          renderInverse(solveInverse(values), values.targetNet);
+        } catch (error) {
+          const box = document.getElementById('inverse-error');
+          box.textContent = error.message || 'Não foi possível calcular a proposta.';
+          box.classList.add('show');
+        }
+      }
+
+      function calculateService(direction, amount) {
+        if (direction === 'gross') {
+          const gross = amount;
+          const irt = gross * RULES.serviceIrtRate;
+          return { gross, irt, net: gross - irt, direction };
+        }
+        if (direction === 'net') {
+          const net = amount;
+          const gross = net / (1 - RULES.serviceIrtRate);
+          return { gross, irt: gross - net, net, direction };
+        }
+        throw new Error('Tipo de cálculo inválido.');
+      }
+
+      function updateService() {
+        const box = document.getElementById('service-error');
+        try {
+          const direction = document.getElementById('service-direction').value;
+          const amount = numberFrom('service-amount');
+          const result = calculateService(direction, amount);
+          box.classList.remove('show');
+          box.textContent = '';
+          setText('service-amount-label', direction === 'gross' ? 'Valor bruto acordado' : 'Valor líquido pretendido');
+          setText('service-net', fmt(result.net));
+          setText('service-gross', fmt(result.gross));
+          setText('service-irt', fmt(result.irt));
+          setText('service-net-2', fmt(result.net));
+          setText('service-formula', direction === 'gross'
+            ? `${fmt(result.gross)} × 6,5% = ${fmt(result.irt)} de IRT retido.`
+            : `${fmt(result.net)} ÷ 93,5% = ${fmt(result.gross)} de valor bruto necessário.`);
+        } catch (error) {
+          box.textContent = error.message || 'Não foi possível calcular a prestação.';
+          box.classList.add('show');
+        }
+      }
+
+      function setText(id, value) { document.getElementById(id).textContent = value; }
+
+      function render(result) {
+        errorBox.classList.remove('show');
+        errorBox.textContent = '';
+        ids.forEach(id => document.getElementById(id).setAttribute('aria-invalid', 'false'));
+        const net = document.getElementById('net');
+        net.classList.add('updating');
+        requestAnimationFrame(() => {
+          setText('net', fmt(result.net));
+          net.classList.remove('updating');
+        });
+        setText('gross', fmt(result.gross));
+        setText('inss-worker', `${fmt(result.workerInss)} (${pct(result.workerRate)})`);
+        setText('irt', fmt(result.irt));
+        setText('taxable', fmt(result.taxable));
+        setText('inss-employer', fmt(result.employerInss));
+        setText('employer-cost', fmt(result.employerCost));
+        setText('inss-base', fmt(result.inssBase));
+        setText('tax-before-inss', fmt(result.taxBeforeInss));
+        setText('inss-deduction', `− ${fmt(result.workerInss)}`);
+        setText('bracket', result.bracket.label);
+        setText('formula', result.bracket.rate === 0
+          ? 'Sem IRT: matéria colectável até 150 000 Kz.'
+          : `${fmt(result.bracket.fixed)} + (${fmt(result.taxable)} − ${fmt(result.bracket.excess)}) × ${pct(result.bracket.rate)} = ${fmt(result.irt)}`);
+        document.querySelectorAll('#tax-table tr').forEach((row, index) => row.classList.toggle('current', RULES.brackets[index] === result.bracket));
+      }
+
+      function renderError(error) {
+        errorBox.textContent = error.message || 'Não foi possível efectuar o cálculo.';
+        errorBox.classList.add('show');
+      }
+
+      function update() {
+        try { render(calculate(readValues())); } catch (error) { renderError(error); }
+      }
+
+      function renderTable() {
+        document.getElementById('tax-table').innerHTML = RULES.brackets.map(b =>
+          `<tr><td>${b.label}</td><td>${fmt(b.fixed)}</td><td>${pct(b.rate)}</td></tr>`
+        ).join('');
+      }
+
+      form.addEventListener('input', update);
+      form.addEventListener('change', update);
+      document.getElementById('reset').addEventListener('click', () => {
+        ids.forEach(id => { document.getElementById(id).value = '0'; });
+        status.value = 'normal';
+        update();
+        document.getElementById('base').focus();
+      });
+
+      document.querySelectorAll('.mode-tab').forEach((tab, index, tabs) => {
+        tab.addEventListener('click', () => selectMode(tab.dataset.mode));
+        tab.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : (index - 1 + tabs.length) % tabs.length;
+          selectMode(tabs[next].dataset.mode, true);
+        });
+      });
+      document.getElementById('inverse-form').addEventListener('input', updateInverse);
+      document.getElementById('inverse-form').addEventListener('change', updateInverse);
+      document.getElementById('service-form').addEventListener('input', updateService);
+      document.getElementById('service-form').addEventListener('change', updateService);
+
+      function registerWebMcp() {
+        const context = document.modelContext;
+        if (!context?.registerTool) return;
+        const schema = {
+          type: 'object',
+          properties: {
+            base: { type: 'number', minimum: 0, description: 'Salário base mensal em kwanzas.' },
+            meal: { type: 'number', minimum: 0, description: 'Subsídio mensal de alimentação.' },
+            transport: { type: 'number', minimum: 0, description: 'Subsídio mensal de transporte.' },
+            other: { type: 'number', minimum: 0, description: 'Outras remunerações sujeitas a INSS e IRT.' },
+            vacation: { type: 'number', minimum: 0, description: 'Subsídio de férias, excluído da base de INSS.' },
+            family: { type: 'number', minimum: 0, description: 'Abono de família.' },
+            deductions: { type: 'number', minimum: 0, description: 'Outros descontos que afectam apenas o líquido.' },
+            status: { type: 'string', enum: ['normal', 'retired'], description: 'Situação contributiva.' }
+          },
+          required: ['base'],
+          additionalProperties: false
+        };
+        try {
+          Promise.resolve(context.registerTool({
+            name: 'calculate_angola_payroll_2026',
+            title: 'Calcular IRT e INSS',
+            description: 'Calcula e apresenta no simulador o IRT, o INSS, o salário líquido e o custo da entidade empregadora segundo as regras de Angola para 2026.',
+            inputSchema: schema,
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute(input) {
+              const merged = { base: 0, meal: 0, transport: 0, other: 0, vacation: 0, family: 0, deductions: 0, status: 'normal', ...input };
+              const values = readValues(merged);
+              ids.forEach(id => { document.getElementById(id).value = String(values[id]); });
+              status.value = values.status;
+              const result = calculate(values);
+              render(result);
+              return { year: RULES.year, gross: result.gross, workerInss: result.workerInss, taxableIncome: result.taxable, irt: result.irt, net: result.net, employerInss: result.employerInss, employerCost: result.employerCost, currency: 'AOA' };
+            }
+          })).catch(() => {});
+          Promise.resolve(context.registerTool({
+            name: 'calculate_angola_salary_proposal_2026',
+            title: 'Calcular proposta salarial',
+            description: 'Calcula o salário base, a remuneração bruta e o custo da entidade necessários para atingir um salário líquido pretendido em Angola.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                targetNet: { type: 'number', minimum: 0 },
+                meal: { type: 'number', minimum: 0 },
+                transport: { type: 'number', minimum: 0 },
+                other: { type: 'number', minimum: 0 },
+                deductions: { type: 'number', minimum: 0 },
+                status: { type: 'string', enum: ['normal', 'retired'] }
+              },
+              required: ['targetNet'],
+              additionalProperties: false
+            },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute(input) {
+              const values = readInverseValues({ meal: 0, transport: 0, other: 0, deductions: 0, status: 'normal', ...input });
+              const result = solveInverse(values);
+              document.getElementById('inv-net').value = String(values.targetNet);
+              document.getElementById('inv-meal').value = String(values.meal);
+              document.getElementById('inv-transport').value = String(values.transport);
+              document.getElementById('inv-other').value = String(values.other);
+              document.getElementById('inv-deductions').value = String(values.deductions);
+              document.getElementById('inv-status').value = values.status;
+              selectMode('inverse');
+              renderInverse(result, values.targetNet);
+              return { year: RULES.year, targetNet: values.targetNet, baseSalary: result.base, gross: result.gross, workerInss: result.workerInss, irt: result.irt, net: result.net, employerCost: result.employerCost, currency: 'AOA' };
+            }
+          })).catch(() => {});
+          Promise.resolve(context.registerTool({
+            name: 'calculate_angola_service_withholding',
+            title: 'Calcular prestação de serviços',
+            description: 'Calcula o valor bruto, a retenção de IRT a 6,5% e o líquido de uma prestação de serviços em Angola.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                direction: { type: 'string', enum: ['gross', 'net'] },
+                amount: { type: 'number', minimum: 0 }
+              },
+              required: ['direction', 'amount'],
+              additionalProperties: false
+            },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute(input) {
+              const amount = Number(input?.amount);
+              if (!Number.isFinite(amount) || amount < 0) throw new Error('O valor deve ser igual ou superior a zero.');
+              const result = calculateService(input.direction, amount);
+              document.getElementById('service-direction').value = input.direction;
+              document.getElementById('service-amount').value = String(amount);
+              selectMode('service');
+              updateService();
+              return { gross: result.gross, irtRate: RULES.serviceIrtRate, irt: result.irt, net: result.net, currency: 'AOA' };
+            }
+          })).catch(() => {});
+        } catch (_) {}
+      }
+
+      renderTable();
+      update();
+      updateInverse();
+      updateService();
+      selectMode('salary');
+      registerWebMcp();
+    })();
+  </script>
+</body>
+</html>
